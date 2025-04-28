@@ -79,10 +79,7 @@ function addHistoryEntry(action, bookmarkData) {
     const history = result.bookmarkHistory || [];
     // 将新历史记录添加到开头
     history.unshift(historyEntry);
-    // 如果历史记录太长，限制其长度
-    if (history.length > 500) {
-      history.splice(500);
-    }
+    // 不再限制历史记录数量
     chrome.storage.local.set({ bookmarkHistory: history });
   });
 } 
