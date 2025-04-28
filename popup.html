@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>书签历史追踪器</title>
+  <link rel="stylesheet" href="styles.css">
+  <meta name="color-scheme" content="light dark">
+</head>
+<body>
+  <header>
+    <h1>书签历史</h1>
+    <div class="tabs">
+      <button id="tab-history" class="tab-btn active">历史记录</button>
+      <button id="tab-deleted" class="tab-btn">已删除</button>
+    </div>
+  </header>
+  
+  <div id="history-view" class="view active">
+    <div class="filter-bar">
+      <select id="action-filter">
+        <option value="all">所有操作</option>
+        <option value="created">创建</option>
+        <option value="removed">删除</option>
+        <option value="changed">修改</option>
+        <option value="moved">移动</option>
+      </select>
+      <input type="text" id="search-input" placeholder="搜索书签...">
+      <button id="clear-history">清空</button>
+    </div>
+    <div id="history-list" class="list-container"></div>
+  </div>
+  
+  <div id="deleted-view" class="view">
+    <div class="filter-bar">
+      <input type="text" id="deleted-search-input" placeholder="搜索已删除书签...">
+    </div>
+    <div id="deleted-list" class="list-container"></div>
+  </div>
+  
+  <template id="history-item-template">
+    <div class="history-item">
+      <div class="item-header">
+        <span class="timestamp"></span>
+        <span class="action-type"></span>
+      </div>
+      <div class="item-content">
+        <h3 class="bookmark-title"></h3>
+        <a class="bookmark-url" target="_blank"></a>
+      </div>
+      <div class="item-actions">
+        <button class="restore-btn" style="display: none;">恢复</button>
+        <button class="details-btn">详情</button>
+      </div>
+    </div>
+  </template>
+  
+  <div id="details-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>书签详情</h2>
+      <div id="bookmark-details"></div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html> 

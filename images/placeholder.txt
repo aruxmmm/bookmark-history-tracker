@@ -1,0 +1,12 @@
+请替换以下文件为实际的PNG图标:
+
+1. icon16.png (16x16像素)
+2. icon48.png (48x48像素) 
+3. icon128.png (128x128像素)
+
+您可以使用在线工具创建简单的图标，如:
+- https://favicon.io/
+- https://www.canva.com/
+- https://www.figma.com/
+
+或使用任何图像编辑软件创建所需尺寸的图标。
