@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "书签历史追踪器",
   "version": "1.0",
-  "description": "追踪和管理Chrome书签的修改历史，支持Google账号同步",
+  "description": "追踪和管理Chrome书签的修改历史",
   "permissions": [
     "bookmarks",
     "storage"

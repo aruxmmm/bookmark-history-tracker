@@ -384,21 +384,4 @@ h1 {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-/* 存储信息样式 */
-.storage-info {
-  margin: 0 0 15px 0;
-  padding: 10px 15px;
-  background-color: var(--secondary-color);
-  border-radius: 10px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  color: var(--light-text);
-}
-
-.storage-info strong {
-  color: var(--primary-color);
-  font-weight: 600;
 } 
