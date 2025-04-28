@@ -12,6 +12,8 @@ chrome.runtime.onInstalled.addListener(() => {
       chrome.storage.local.set({ bookmarkHistory: [] });
     }
   });
+  
+  console.log('书签历史追踪器已初始化，所有数据保存在本地');
 });
 
 // 监听书签创建事件
@@ -72,14 +74,24 @@ function addHistoryEntry(action, bookmarkData) {
     id: Date.now().toString(),
     timestamp: Date.now(),
     action: action,
-    bookmark: bookmarkData
+    bookmark: bookmarkData,
+    // 添加日期相关字段，方便按日期检索
+    date: new Date().toISOString().split('T')[0], // YYYY-MM-DD格式
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1, // 月份从1开始
+    day: new Date().getDate()
   };
 
+  // 保存到本地存储
   chrome.storage.local.get('bookmarkHistory', result => {
     const history = result.bookmarkHistory || [];
-    // 将新历史记录添加到开头
+    
+    // 将新记录添加到开头
     history.unshift(historyEntry);
-    // 不再限制历史记录数量
-    chrome.storage.local.set({ bookmarkHistory: history });
+    
+    // 保存到本地存储
+    chrome.storage.local.set({ bookmarkHistory: history }, () => {
+      console.log('新记录已保存到本地存储');
+    });
   });
 } 

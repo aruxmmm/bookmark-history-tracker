@@ -15,26 +15,105 @@
     </div>
   </header>
   
-  <div id="history-view" class="view active">
-    <div class="filter-bar">
-      <select id="action-filter">
-        <option value="all">所有操作</option>
-        <option value="created">创建</option>
-        <option value="removed">删除</option>
-        <option value="changed">修改</option>
-        <option value="moved">移动</option>
-      </select>
-      <input type="text" id="search-input" placeholder="搜索书签...">
-      <button id="clear-history">清空</button>
+  <div class="content-container">
+    <!-- 历史记录视图控件 -->
+    <div id="history-controls" class="view-controls active">
+      <div id="storage-info-container" class="clickable-info">
+        <!-- 历史记录数量信息将在这里动态插入 -->
+      </div>
+      
+      <div id="search-container" class="search-overlay" style="display: none;">
+        <input type="text" id="search-input" placeholder="搜索书签...">
+        <button id="close-search" class="close-search-btn">取消</button>
+      </div>
+      
+      <div class="filters-row">
+        <div class="filter-item">
+          <button id="toggle-action-filter" class="toggle-filter-btn">
+            <span class="filter-icon">⚙️</span>
+            <span>所有操作</span>
+            <span class="chevron-icon">⌄</span>
+          </button>
+          <div id="action-filter-menu" class="filter-menu collapsed">
+            <div class="filter-option" data-value="all">所有操作</div>
+            <div class="filter-option" data-value="created">创建</div>
+            <div class="filter-option" data-value="removed">删除</div>
+            <div class="filter-option" data-value="changed">修改</div>
+            <div class="filter-option" data-value="moved">移动</div>
+          </div>
+        </div>
+        
+        <div class="filter-item">
+          <button id="toggle-date-filter" class="toggle-filter-btn">
+            <span class="filter-icon">⏱</span>
+            <span>日期筛选</span>
+            <span class="chevron-icon">⌄</span>
+          </button>
+          <div class="date-filter collapsed">
+            <div class="date-range">
+              <label for="date-start">从：</label>
+              <input type="date" id="date-start">
+              <label for="date-end">至：</label>
+              <input type="date" id="date-end">
+              <button id="apply-date-filter">应用</button>
+              <button id="reset-date-filter">重置</button>
+            </div>
+            <div class="date-shortcuts">
+              <button class="date-shortcut" data-days="7">近一周</button>
+              <button class="date-shortcut" data-days="30">近一月</button>
+              <button class="date-shortcut" data-days="90">近三月</button>
+              <button class="date-shortcut" data-days="365">近一年</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <button id="clear-history" class="clear-btn">清空历史</button>
     </div>
-    <div id="history-list" class="list-container"></div>
-  </div>
-  
-  <div id="deleted-view" class="view">
-    <div class="filter-bar">
-      <input type="text" id="deleted-search-input" placeholder="搜索已删除书签...">
+    
+    <!-- 已删除书签视图控件 -->
+    <div id="deleted-controls" class="view-controls">
+      <div id="deleted-storage-info" class="clickable-info">
+        <!-- 已删除书签数量信息将在这里动态插入 -->
+      </div>
+      
+      <div id="deleted-search-container" class="search-overlay" style="display: none;">
+        <input type="text" id="deleted-search-input" placeholder="搜索已删除书签...">
+        <button id="close-deleted-search" class="close-search-btn">取消</button>
+      </div>
+      
+      <div class="filters-row">
+        <div class="filter-item full-width">
+          <button id="toggle-deleted-date-filter" class="toggle-filter-btn">
+            <span class="filter-icon">⏱</span>
+            <span>日期筛选</span>
+            <span class="chevron-icon">⌄</span>
+          </button>
+          <div class="date-filter collapsed">
+            <div class="date-range">
+              <label for="deleted-date-start">从：</label>
+              <input type="date" id="deleted-date-start">
+              <label for="deleted-date-end">至：</label>
+              <input type="date" id="deleted-date-end">
+              <button id="apply-deleted-date-filter">应用</button>
+              <button id="reset-deleted-date-filter">重置</button>
+            </div>
+            <div class="date-shortcuts">
+              <button class="deleted-date-shortcut" data-days="7">近一周</button>
+              <button class="deleted-date-shortcut" data-days="30">近一月</button>
+              <button class="deleted-date-shortcut" data-days="90">近三月</button>
+              <button class="deleted-date-shortcut" data-days="365">近一年</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div id="deleted-list" class="list-container"></div>
+    
+    <!-- 共享的列表容器 -->
+    <div class="shared-list-container">
+      <div id="history-list" class="list-view active"></div>
+      <div id="deleted-list" class="list-view"></div>
+    </div>
   </div>
   
   <template id="history-item-template">

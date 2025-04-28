@@ -10,6 +10,7 @@
   --danger-color: #ff3b30;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   --transition: all 0.2s ease;
+  --primary-color-rgb: 0, 112, 201;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -24,6 +25,7 @@
     --warning-color: #ff9f0a;
     --danger-color: #ff453a;
     --shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --primary-color-rgb: 10, 132, 255;
   }
 }
 
@@ -35,22 +37,31 @@
   -webkit-font-smoothing: antialiased;
 }
 
-body {
+/* 完全重写主要布局结构，确保只有一个滚动条 */
+html, body {
+  margin: 0;
+  padding: 0;
   width: 380px;
-  max-height: 580px;
-  overflow-x: hidden;
+  height: 600px;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
   color: var(--text-color);
   background-color: var(--background-color);
   font-size: 14px;
   line-height: 1.4;
 }
 
+/* 头部固定不动 */
 header {
+  flex-shrink: 0;
   background-color: var(--background-color);
   color: var(--text-color);
-  padding: 16px 20px;
-  position: sticky;
-  top: 0;
+  padding: 12px 20px;
+  position: relative;
   z-index: 10;
   border-bottom: 1px solid var(--border-color);
 }
@@ -58,7 +69,7 @@ header {
 h1 {
   font-size: 18px;
   font-weight: 600;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .tabs {
@@ -71,7 +82,7 @@ h1 {
   border: none;
   color: var(--light-text);
   font-size: 14px;
-  padding: 6px 14px;
+  padding: 5px 12px;
   cursor: pointer;
   border-radius: 20px;
   transition: var(--transition);
@@ -97,10 +108,9 @@ h1 {
   display: block;
 }
 
+/* 旧的样式已经不需要，可以删除 */
 .filter-bar {
-  display: flex;
-  margin-bottom: 20px;
-  gap: 10px;
+  display: none;
 }
 
 #action-filter, #search-input, #deleted-search-input {
@@ -143,30 +153,227 @@ h1 {
   background-color: var(--border-color);
 }
 
-.list-container {
-  max-height: 450px;
+/* 内容区域占满剩余空间 */
+.content-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 12px 20px;
+}
+
+/* 控件区域 */
+.view-controls {
+  flex-shrink: 0;
+  display: none;
+  margin-bottom: 10px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.view-controls.active {
+  display: block;
+  opacity: 1;
+}
+
+/* 新的筛选器行布局 */
+.filters-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 20;
+}
+
+.filter-item {
+  flex: 1;
+  position: relative;
+  z-index: 30;
+}
+
+.filter-item.full-width {
+  width: 100%;
+}
+
+/* 可点击的历史记录计数 */
+.clickable-info {
+  background-color: var(--secondary-color);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.clickable-info:hover {
+  background-color: var(--border-color);
+}
+
+.clickable-info .search-icon {
+  color: var(--primary-color);
+  font-size: 16px;
+}
+
+/* 搜索覆盖层 */
+.search-overlay {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.search-overlay input[type="text"] {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 14px;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: var(--transition);
+}
+
+.search-overlay input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 112, 201, 0.2);
+}
+
+.close-search-btn {
+  background: transparent;
+  border: none;
+  color: var(--light-text);
+  padding: 0 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.close-search-btn:hover {
+  color: var(--text-color);
+}
+
+/* 操作筛选菜单 */
+.filter-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--secondary-color);
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+  max-height: 300px;
+  padding: 0;
+  margin: 0;
+  transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+  z-index: 50;
+  opacity: 1;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.filter-menu.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+.filter-option {
+  padding: 10px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.filter-option:last-child {
+  border-bottom: none;
+}
+
+.filter-option:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.filter-option.selected {
+  background-color: rgba(var(--primary-color-rgb), 0.1);
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+/* 清空按钮 */
+.clear-btn {
+  background-color: var(--secondary-color);
+  border: none;
+  color: var(--text-color);
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: var(--transition);
+  width: 100%;
+  text-align: center;
+  margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.clear-btn:hover {
+  background-color: var(--border-color);
+}
+
+/* 列表容器是唯一可滚动的部分 */
+.shared-list-container {
+  flex: 1;
   overflow-y: auto;
-  padding-right: 4px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
-.list-container::-webkit-scrollbar {
-  width: 8px;
+/* 确保滚动条样式统一 */
+.shared-list-container::-webkit-scrollbar {
+  width: 6px;
 }
 
-.list-container::-webkit-scrollbar-track {
+.shared-list-container::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.list-container::-webkit-scrollbar-thumb {
+.shared-list-container::-webkit-scrollbar-thumb {
   background-color: var(--border-color);
-  border-radius: 4px;
+  border-radius: 3px;
+}
+
+.list-view {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.list-view.active {
+  display: block;
+  opacity: 1;
+}
+
+.list-container {
+  display: none;
 }
 
 .history-item {
   background-color: var(--background-color);
   border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
   box-shadow: var(--shadow);
   transition: var(--transition);
 }
@@ -179,16 +386,19 @@ h1 {
 .item-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   font-size: 12px;
   color: var(--light-text);
 }
 
 .action-type {
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 12px;
   font-weight: 500;
-  font-size: 11px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .action-type.created {
@@ -212,13 +422,13 @@ h1 {
 }
 
 .item-content {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .bookmark-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
@@ -226,7 +436,7 @@ h1 {
 }
 
 .bookmark-url {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--primary-color);
   text-decoration: none;
   display: block;
@@ -245,7 +455,7 @@ h1 {
   background-color: transparent;
   border: 1px solid var(--border-color);
   color: var(--text-color);
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 16px;
   cursor: pointer;
   font-size: 12px;
@@ -276,8 +486,8 @@ h1 {
   left: 0;
   width: 100%;
   height: 100%;
+  z-index: 1000;
   background-color: rgba(0, 0, 0, 0.4);
-  z-index: 100;
   backdrop-filter: blur(4px);
   transition: opacity 0.2s ease;
 }
@@ -338,7 +548,7 @@ h1 {
 
 .empty-message {
   text-align: center;
-  padding: 40px 0;
+  padding: 30px 0;
   color: var(--light-text);
   font-style: italic;
 }
@@ -384,4 +594,168 @@ h1 {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* 存储信息样式 */
+#storage-info-container {
+  margin-bottom: 15px;
+}
+
+.storage-info {
+  margin: 0 0 15px 0;
+  padding: 10px 15px;
+  background-color: var(--secondary-color);
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--light-text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.storage-info strong {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* 日期筛选样式 */
+.date-filter-header {
+  margin-bottom: 8px;
+}
+
+.toggle-filter-btn {
+  width: 100%;
+  background-color: var(--secondary-color);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.toggle-filter-btn:hover {
+  background-color: var(--border-color);
+}
+
+.filter-icon {
+  font-size: 16px;
+  margin-right: 8px;
+  color: var(--primary-color);
+}
+
+.chevron-icon {
+  margin-left: auto;
+  font-size: 18px;
+  line-height: 1;
+  transform: rotate(0deg);
+  transition: transform 0.3s ease;
+  color: var(--light-text);
+}
+
+.toggle-filter-btn.expanded .chevron-icon {
+  transform: rotate(180deg);
+}
+
+.date-filter {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background-color: var(--secondary-color);
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+  max-height: 300px;
+  transition: max-height 0.3s ease, padding 0.3s ease, margin 0.3s ease, opacity 0.3s ease;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+}
+
+.date-filter.collapsed {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  opacity: 0;
+}
+
+.date-range {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.date-range label {
+  font-size: 13px;
+  color: var(--light-text);
+}
+
+.date-range input[type="date"] {
+  padding: 6px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 13px;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.date-range button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 500;
+}
+
+#apply-date-filter, #apply-deleted-date-filter {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+#reset-date-filter, #reset-deleted-date-filter {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.date-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.date-shortcut, .deleted-date-shortcut {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 15px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.date-shortcut:hover, .deleted-date-shortcut:hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* 确保所有其他容器不滚动 */
+.filters-row, .filter-item, .date-filter, .filter-menu {
+  overflow: visible;
 } 
