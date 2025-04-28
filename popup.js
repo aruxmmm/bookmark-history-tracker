@@ -33,6 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
     'moved': '↪'
   };
   
+  // 存储同步状态
+  let syncCount = 0;
+  let localCount = 0;
+  
   // 防抖函数
   function debounce(func, wait) {
     let timeout;
@@ -74,9 +78,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // 清空历史记录
   clearHistoryBtn.addEventListener('click', () => {
     showConfirmDialog('确定要清空所有历史记录吗？', '此操作不可撤销', () => {
-      chrome.storage.local.set({ bookmarkHistory: [] }, () => {
-        loadHistoryData();
-        showToast('历史记录已清空');
+      // 清空同步和本地存储
+      chrome.storage.sync.set({ bookmarkHistory: [] }, () => {
+        chrome.storage.local.set({ bookmarkHistoryArchive: [] }, () => {
+          loadHistoryData();
+          showToast('历史记录已清空');
+        });
       });
     });
   });
@@ -129,11 +136,50 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // 加载历史数据
   function loadHistoryData() {
-    chrome.storage.local.get('bookmarkHistory', (result) => {
-      const historyData = result.bookmarkHistory || [];
-      renderHistoryList(historyData);
-      renderDeletedList(historyData);
+    // 显示加载中状态
+    historyList.innerHTML = '<div class="loading-spinner"></div>';
+    deletedList.innerHTML = '<div class="loading-spinner"></div>';
+    
+    // 获取同步存储中的记录
+    chrome.storage.sync.get('bookmarkHistory', syncResult => {
+      const syncHistory = syncResult.bookmarkHistory || [];
+      syncCount = syncHistory.length;
+      
+      // 获取本地存储的记录
+      chrome.storage.local.get('bookmarkHistoryArchive', localResult => {
+        const localHistory = localResult.bookmarkHistoryArchive || [];
+        localCount = localHistory.length;
+        
+        // 合并历史记录并按时间排序
+        const allHistory = [...syncHistory, ...localHistory].sort((a, b) => b.timestamp - a.timestamp);
+        
+        // 更新状态信息
+        updateStorageInfo();
+        
+        // 渲染列表
+        renderHistoryList(allHistory);
+        renderDeletedList(allHistory);
+      });
     });
+  }
+  
+  // 更新存储状态信息
+  function updateStorageInfo() {
+    const storageInfo = document.createElement('div');
+    storageInfo.className = 'storage-info';
+    storageInfo.innerHTML = `
+      <span>已同步: <strong>${syncCount}</strong> 条记录</span>
+      <span>本地存储: <strong>${localCount}</strong> 条记录</span>
+    `;
+    
+    // 移除旧信息
+    const oldInfo = document.querySelector('.storage-info');
+    if (oldInfo) {
+      oldInfo.remove();
+    }
+    
+    // 添加到历史视图
+    historyView.insertBefore(storageInfo, historyView.firstChild);
   }
   
   // 切换标签 - 添加平滑过渡
@@ -168,81 +214,87 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   // 渲染历史列表
-  function renderHistoryList() {
-    chrome.storage.local.get('bookmarkHistory', (result) => {
-      const historyData = result.bookmarkHistory || [];
-      const selectedAction = actionFilter.value;
-      const searchTerm = searchInput.value.toLowerCase();
+  function renderHistoryList(historyData) {
+    // 如果没有传入数据，重新加载
+    if (!historyData) {
+      loadHistoryData();
+      return;
+    }
+    
+    const selectedAction = actionFilter.value;
+    const searchTerm = searchInput.value.toLowerCase();
+    
+    // 添加加载动画
+    historyList.innerHTML = '<div class="loading-spinner"></div>';
+    
+    // 延迟一点点以显示动画
+    setTimeout(() => {
+      historyList.innerHTML = '';
       
-      // 添加加载动画
-      historyList.innerHTML = '<div class="loading-spinner"></div>';
+      const filteredData = historyData.filter(entry => {
+        const matchesAction = selectedAction === 'all' || entry.action === selectedAction;
+        const matchesSearch = !searchTerm || 
+          (entry.bookmark.title && entry.bookmark.title.toLowerCase().includes(searchTerm)) || 
+          (entry.bookmark.url && entry.bookmark.url.toLowerCase().includes(searchTerm));
+        
+        return matchesAction && matchesSearch;
+      });
       
-      // 延迟一点点以显示动画
-      setTimeout(() => {
-        historyList.innerHTML = '';
-        
-        const filteredData = historyData.filter(entry => {
-          const matchesAction = selectedAction === 'all' || entry.action === selectedAction;
-          const matchesSearch = !searchTerm || 
-            (entry.bookmark.title && entry.bookmark.title.toLowerCase().includes(searchTerm)) || 
-            (entry.bookmark.url && entry.bookmark.url.toLowerCase().includes(searchTerm));
-          
-          return matchesAction && matchesSearch;
-        });
-        
-        if (filteredData.length === 0) {
-          historyList.innerHTML = '<div class="empty-message">没有找到匹配的历史记录</div>';
-          return;
-        }
-        
-        // 使用文档片段优化性能
-        const fragment = document.createDocumentFragment();
-        filteredData.forEach(entry => {
-          const item = createHistoryItem(entry);
-          fragment.appendChild(item);
-        });
-        
-        historyList.appendChild(fragment);
-      }, 300);
-    });
+      if (filteredData.length === 0) {
+        historyList.innerHTML = '<div class="empty-message">没有找到匹配的历史记录</div>';
+        return;
+      }
+      
+      // 使用文档片段优化性能
+      const fragment = document.createDocumentFragment();
+      filteredData.forEach(entry => {
+        const item = createHistoryItem(entry);
+        fragment.appendChild(item);
+      });
+      
+      historyList.appendChild(fragment);
+    }, 300);
   }
   
   // 渲染已删除书签列表
-  function renderDeletedList() {
-    chrome.storage.local.get('bookmarkHistory', (result) => {
-      const historyData = result.bookmarkHistory || [];
-      const searchTerm = deletedSearchInput.value.toLowerCase();
+  function renderDeletedList(historyData) {
+    // 如果没有传入数据，重新加载
+    if (!historyData) {
+      loadHistoryData();
+      return;
+    }
+    
+    const searchTerm = deletedSearchInput.value.toLowerCase();
+    
+    // 添加加载动画
+    deletedList.innerHTML = '<div class="loading-spinner"></div>';
+    
+    setTimeout(() => {
+      deletedList.innerHTML = '';
       
-      // 添加加载动画
-      deletedList.innerHTML = '<div class="loading-spinner"></div>';
+      const deletedBookmarks = historyData.filter(entry => {
+        const isRemoved = entry.action === 'removed';
+        const matchesSearch = !searchTerm || 
+          (entry.bookmark.title && entry.bookmark.title.toLowerCase().includes(searchTerm)) || 
+          (entry.bookmark.url && entry.bookmark.url.toLowerCase().includes(searchTerm));
+        
+        return isRemoved && matchesSearch;
+      });
       
-      setTimeout(() => {
-        deletedList.innerHTML = '';
-        
-        const deletedBookmarks = historyData.filter(entry => {
-          const isRemoved = entry.action === 'removed';
-          const matchesSearch = !searchTerm || 
-            (entry.bookmark.title && entry.bookmark.title.toLowerCase().includes(searchTerm)) || 
-            (entry.bookmark.url && entry.bookmark.url.toLowerCase().includes(searchTerm));
-          
-          return isRemoved && matchesSearch;
-        });
-        
-        if (deletedBookmarks.length === 0) {
-          deletedList.innerHTML = '<div class="empty-message">没有找到已删除的书签</div>';
-          return;
-        }
-        
-        // 使用文档片段优化性能
-        const fragment = document.createDocumentFragment();
-        deletedBookmarks.forEach(entry => {
-          const item = createHistoryItem(entry, true);
-          fragment.appendChild(item);
-        });
-        
-        deletedList.appendChild(fragment);
-      }, 300);
-    });
+      if (deletedBookmarks.length === 0) {
+        deletedList.innerHTML = '<div class="empty-message">没有找到已删除的书签</div>';
+        return;
+      }
+      
+      // 使用文档片段优化性能
+      const fragment = document.createDocumentFragment();
+      deletedBookmarks.forEach(entry => {
+        const item = createHistoryItem(entry, true);
+        fragment.appendChild(item);
+      });
+      
+      deletedList.appendChild(fragment);
+    }, 300);
   }
   
   // 创建历史项目元素
